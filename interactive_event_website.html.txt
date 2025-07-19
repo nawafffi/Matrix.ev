@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Event Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            touch-action: manipulation;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* Language Toggle */
+        .language-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+        }
+
+        /* Main Sections */
+        .section {
+            display: none;
+            min-height: 100vh;
+            padding-top: 80px;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* Home Page */
+        .home {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+        }
+
+        .hero {
+            margin-bottom: 50px;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.5rem;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+
+        .mode-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .mode-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .mode-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .mode-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: #feca57;
+        }
+
+        .mode-card p {
+            margin-bottom: 25px;
+            opacity: 0.8;
+        }
+
+        /* Display Screen */
+        .display-screen {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .word-display {
+            font-size: 4rem;
+            font-weight: bold;
+            text-align: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            max-width: 90%;
+            word-wrap: break-word;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes zoomIn {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-20px);
+            }
+            60% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .settings-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .settings-btn:hover {
+            transform: scale(1.1) rotate(45deg);
+        }
+
+        /* Input Screen */
+        .input-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+        }
+
+        .input-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            padding: 50px;
+            max-width: 600px;
+            width: 90%;
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .input-card h2 {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            color: #feca57;
+        }
+
+        .input-group {
+            margin-bottom: 30px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            background: white;
+            transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.3rem;
+            border: none;
+            border-radius: 15px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Settings Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .settings-group {
+            margin-bottom: 25px;
+        }
+
+        .settings-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .settings-group input,
+        .settings-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+
+        .settings-group input:focus,
+        .settings-group select:focus {
+            outline: none;
+            border-color: #ff6b6b;
+        }
+
+        .color-input {
+            height: 50px !important;
+            border: none !important;
+            cursor: pointer;
+        }
+
+        /* QR Code */
+        .qr-section {
+            margin-top: 30px;
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+        }
+
+        #qrcode {
+            margin: 20px auto;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .word-display {
+                font-size: 2.5rem;
+            }
+
+            .input-card {
+                padding: 30px;
+            }
+
+            .nav {
+                padding: 10px 15px;
+            }
+
+            .nav-brand {
+                font-size: 1.2rem;
+            }
+
+            .btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Language specific styles */
+        body[dir="ltr"] .nav {
+            flex-direction: row;
+        }
+
+        body[dir="rtl"] .nav {
+            flex-direction: row-reverse;
+        }
+
+        /* Animation classes */
+        .word-fadeIn { animation: fadeInUp 0.5s ease; }
+        .word-slideIn { animation: slideIn 0.5s ease; }
+        .word-zoomIn { animation: zoomIn 0.5s ease; }
+        .word-bounce { animation: bounce 1s ease; }
+    </style>
+</head>
+<body>
+    <!-- Language Toggle -->
+    <div class="language-toggle">
+        <button class="btn btn-secondary" onclick="toggleLanguage()">
+            <span id="langText">EN</span>
+        </button>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-brand" data-ar="منصة الفعاليات التفاعلية" data-en="Interactive Event Platform">منصة الفعاليات التفاعلية</div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" onclick="showSection('home')" data-ar="الرئيسية" data-en="Home">الرئيسية</button>
+        </div>
+    </nav>
+
+    <!-- Home Section -->
+    <section id="home" class="section active">
+        <div class="container home">
+            <div class="hero">
+                <h1 data-ar="منصة الفعاليات التفاعلية" data-en="Interactive Event Platform">منصة الفعاليات التفاعلية</h1>
+                <p data-ar="شارك الكلمات والأفكار في الوقت الفعلي" data-en="Share words and ideas in real-time">شارك الكلمات والأفكار في الوقت الفعلي</p>
+            </div>
+            
+            <div class="mode-selection">
+                <div class="mode-card" onclick="showSection('display')">
+                    <h3 data-ar="شاشة العرض" data-en="Display Screen">شاشة العرض</h3>
+                    <p data-ar="للعرض الرئيسي على الآيباد" data-en="For main display on iPad">للعرض الرئيسي على الآيباد</p>
+                    <button class="btn btn-primary" data-ar="ابدأ العرض" data-en="Start Display">ابدأ العرض</button>
+                </div>
+                
+                <div class="mode-card" onclick="showSection('input')">
+                    <h3 data-ar="شاشة الكتابة" data-en="Input Screen">شاشة الكتابة</h3>
+                    <p data-ar="للمشاركين للكتابة" data-en="For participants to write">للمشاركين للكتابة</p>
+                    <button class="btn btn-primary" data-ar="ابدأ الكتابة" data-en="Start Writing">ابدأ الكتابة</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Display Section -->
+    <section id="display" class="section">
+        <div class="display-screen">
+            <div id="wordDisplay" class="word-display" data-ar="في انتظار الكلمات..." data-en="Waiting for words...">في انتظار الكلمات...</div>
+        </div>
+        <button class="settings-btn" onclick="showSettings()">⚙️</button>
+    </section>
+
+    <!-- Input Section -->
+    <section id="input" class="section">
+        <div class="container input-screen">
+            <div class="input-card">
+                <h2 data-ar="شارك كلمتك" data-en="Share Your Word">شارك كلمتك</h2>
+                <div class="input-group">
+                    <input type="text" id="wordInput" maxlength="50" data-ar-placeholder="اكتب كلمتك هنا..." data-en-placeholder="Write your word here...">
+                </div>
+                <button class="submit-btn" onclick="submitWord()" data-ar="إرسال" data-en="Submit">إرسال</button>
+                <div class="qr-section">
+                    <h4 data-ar="شارك هذا الرابط" data-en="Share this link">شارك هذا الرابط</h4>
+                    <div id="qrcode"></div>
+                    <p id="linkText" style="word-break: break-all; color: #feca57; font-weight: bold;"></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="hideSettings()">&times;</button>
+            <h2 data-ar="إعدادات العرض" data-en="Display Settings">إعدادات العرض</h2>
+            
+            <div class="settings-group">
+                <label data-ar="اسم الفعالية:" data-en="Event Name:">اسم الفعالية:</label>
+                <input type="text" id="eventName" data-ar-placeholder="اسم الفعالية" data-en-placeholder="Event Name">
+            </div>
+            
+            <div class="settings-group">
+                <label data-ar="لون الخلفية:" data-en="Background Color:">لون الخلفية:</label>
+                <input type="color" id="bgColor" class="color-input" value="#667eea">
+            </div>
+            
+            <div class="settings-group">
+                <label data-ar="لون النص:" data-en="Text Color:">لون النص:</label>
+                <input type="color" id="textColor" class="color-input" value="#ffffff">
+            </div>
+            
+            <div class="settings-group">
+                <label data-ar="نوع الخط:" data-en="Font Family:">نوع الخط:</label>
+                <select id="fontFamily">
+                    <option value="Arial">Arial</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Courier New">Courier New</option>
+                    <option value="Verdana">Verdana</option>
+                    <option value="Amiri">Amiri (عربي)</option>
+                    <option value="Cairo">Cairo (عربي)</option>
+                </select>
+            </div>
+            
+            <div class="settings-group">
+                <label data-ar="حجم الخط:" data-en="Font Size:">حجم الخط:</label>
+                <input type="range" id="fontSize" min="2" max="8" value="4" step="0.5">
+                <span id="fontSizeValue">4rem</span>
+            </div>
+            
+            <div class="settings-group">
+                <label data-ar="سرعة العرض (ثانية):" data-en="Display Speed (seconds):">سرعة العرض (ثانية):</label>
+                <input type="range" id="displaySpeed" min="1" max="10" value="3">
+                <span id="speedValue">3s</span>
+            </div>
+            
+            <div class="settings-group">
+                <label data-ar="تأثير بصري:" data-en="Visual Effect:">تأثير بصري:</label>
+                <select id="visualEffect">
+                    <option value="fadeIn" data-ar="تلاشي" data-en="Fade In">تلاشي</option>
+                    <option value="slideIn" data-ar="انزلاق" data-en="Slide In">انزلاق</option>
+                    <option value="zoomIn" data-ar="تكبير" data-en="Zoom In">تكبير</option>
+                    <option value="bounce" data-ar="نط" data-en="Bounce">نط</option>
+                </select>
+            </div>
+            
+            <button class="btn btn-primary" onclick="applySettings()" style="width: 100%; margin-top: 20px;" data-ar="تطبيق الإعدادات" data-en="Apply Settings">تطبيق الإعدادات</button>
+        </div>
+    </div>
+
+    <!-- No external QR library needed -->
+
+    <script>
+        // Global variables
+        let currentLanguage = 'ar';
+        let words = [];
+        let currentWordIndex = 0;
+        let displayInterval;
+        let settings = {
+            eventName: 'الفعالية التفاعلية',
+            bgColor: '#667eea',
+            textColor: '#ffffff',
+            fontFamily: 'Arial',
+            fontSize: 4,
+            displaySpeed: 3,
+            visualEffect: 'fadeIn'
+        };
+
+        // Language system
+        function toggleLanguage() {
+            currentLanguage = currentLanguage === 'ar' ? 'en' : 'ar';
+            document.documentElement.lang = currentLanguage;
+            document.documentElement.dir = currentLanguage === 'ar' ? 'rtl' : 'ltr';
+            
+            updateLanguageText();
+            document.getElementById('langText').textContent = currentLanguage === 'ar' ? 'EN' : 'ع';
+        }
+
+        function updateLanguageText() {
+            const elements = document.querySelectorAll('[data-ar][data-en]');
+            elements.forEach(element => {
+                if (element.placeholder !== undefined) {
+                    element.placeholder = element.getAttribute(`data-${currentLanguage}-placeholder`);
+                } else {
+                    element.textContent = element.getAttribute(`data-${currentLanguage}`);
+                }
+            });
+
+            // Update select options
+            const selectOptions = document.querySelectorAll('option[data-ar][data-en]');
+            selectOptions.forEach(option => {
+                option.textContent = option.getAttribute(`data-${currentLanguage}`);
+            });
+
+            // Update input placeholder
+            const wordInput = document.getElementById('wordInput');
+            wordInput.placeholder = wordInput.getAttribute(`data-${currentLanguage}-placeholder`);
+        }
+
+        // Section navigation
+        function showSection(sectionName) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionName).classList.add('active');
+
+            if (sectionName === 'input') {
+                generateQR();
+            }
+            
+            if (sectionName === 'display') {
+                startDisplayLoop();
+            } else {
+                stopDisplayLoop();
+            }
+        }
+
+        // Word management
+        function submitWord() {
+            const wordInput = document.getElementById('wordInput');
+            const word = wordInput.value.trim();
+            
+            if (word) {
+                words.push(word);
+                wordInput.value = '';
+                
+                // Visual feedback
+                const submitBtn = document.querySelector('.submit-btn');
+                const originalText = submitBtn.textContent;
+                submitBtn.textContent = currentLanguage === 'ar' ? 'تم الإرسال!' : 'Sent!';
+                submitBtn.style.background = '#2ecc71';
+                
+                setTimeout(() => {
+                    submitBtn.textContent = originalText;
+                    submitBtn.style.background = 'linear-gradient(45deg, #ff6b6b, #ee5a24)';
+                }, 1000);
+
+                // Store in memory (no localStorage in artifacts)
+                console.log('Word added:', word);
+            }
+        }
+
+        // Display management
+        function startDisplayLoop() {
+            stopDisplayLoop();
+            displayWords();
+            displayInterval = setInterval(displayWords, settings.displaySpeed * 1000);
+        }
+
+        function stopDisplayLoop() {
+            if (displayInterval) {
+                clearInterval(displayInterval);
+            }
+        }
+
+        function displayWords() {
+            const wordDisplay = document.getElementById('wordDisplay');
+            
+            if (words.length === 0) {
+                wordDisplay.textContent = currentLanguage === 'ar' ? 'في انتظار الكلمات...' : 'Waiting for words...';
+                return;
+            }
+
+            const word = words[currentWordIndex];
+            wordDisplay.textContent = word;
+            
+            // Apply visual effect
+            wordDisplay.className = `word-display word-${settings.visualEffect}`;
+            
+            // Move to next word
+            currentWordIndex = (currentWordIndex + 1) % words.length;
+        }
+
+        // Settings management
+        function showSettings() {
+            document.getElementById('settingsModal').classList.add('active');
+            loadSettings();
+        }
+
+        function hideSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        function loadSettings() {
+            document.getElementById('eventName').value = settings.eventName;
+            document.getElementById('bgColor').value = settings.bgColor;
+            document.getElementById('textColor').value = settings.textColor;
+            document.getElementById('fontFamily').value = settings.fontFamily;
+            document.getElementById('fontSize').value = settings.fontSize;
+            document.getElementById('displaySpeed').value = settings.displaySpeed;
+            document.getElementById('visualEffect').value = settings.visualEffect;
+            
+            updateSliderValues();
+        }
+
+        function applySettings() {
+            settings.eventName = document.getElementById('eventName').value;
+            settings.bgColor = document.getElementById('bgColor').value;
+            settings.textColor = document.getElementById('textColor').value;
+            settings.fontFamily = document.getElementById('fontFamily').value;
+            settings.fontSize = document.getElementById('fontSize').value;
+            settings.displaySpeed = document.getElementById('displaySpeed').value;
+            settings.visualEffect = document.getElementById('visualEffect').value;
+
+            updateDisplayStyles();
+            hideSettings();
+            
+            if (displayInterval) {
+                startDisplayLoop(); // Restart with new speed
+            }
+        }
+
+        function updateDisplayStyles() {
+            const displayScreen = document.querySelector('.display-screen');
+            const wordDisplay = document.getElementById('wordDisplay');
+            
+            displayScreen.style.background = `linear-gradient(135deg, ${settings.bgColor}, ${adjustColor(settings.bgColor, -20)})`;
+            wordDisplay.style.color = settings.textColor;
+            wordDisplay.style.fontFamily = settings.fontFamily;
+            wordDisplay.style.fontSize = settings.fontSize + 'rem';
+            
+            // Update nav brand
+            document.querySelector('.nav-brand').textContent = settings.eventName;
+        }
+
+        function updateSliderValues() {
+            document.getElementById('fontSizeValue').textContent = document.getElementById('fontSize').value + 'rem';
+            document.getElementById('speedValue').textContent = document.getElementById('displaySpeed').value + 's';
+        }
+
+        function adjustColor(color, amount) {
+            return '#' + color.replace(/^#/, '').replace(/../g, color => ('0'+Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
+        }
+
+        // QR Code generation using Google Charts
+        function generateQR() {
+            const baseUrl = window.location.href.split('#')[0];
+            const inputUrl = baseUrl + '#input';
+            document.getElementById('linkText').textContent = inputUrl;
+            
+            // Create QR code using Google Charts API
+            const qrContainer = document.getElementById('qrcode');
+            const qrSize = 200;
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodeURIComponent(inputUrl)}&bgcolor=ffffff&color=333333`;
+            
+            qrContainer.innerHTML = `
+                <img src="${qrUrl}" 
+                     alt="QR Code" 
+                     style="border-radius: 10px; background: white; padding: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);"
+                     onerror="handleQRError(this, '${inputUrl}')"
+                />
+            `;
+        }
+
+        // Fallback if QR image fails to load
+        function handleQRError(img, url) {
+            img.parentElement.innerHTML = `
+                <div style="
+                    padding: 30px; 
+                    background: rgba(255,255,255,0.95); 
+                    border-radius: 15px; 
+                    color: #333; 
+                    text-align: center;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                    max-width: 300px;
+                    margin: 0 auto;
+                ">
+                    <h4 style="margin: 0 0 15px 0; color: #ff6b6b;">
+                        ${currentLanguage === 'ar' ? 'رابط المشاركة' : 'Share Link'}
+                    </h4>
+                    <p style="
+                        margin: 0; 
+                        word-break: break-all; 
+                        font-size: 0.9rem; 
+                        background: #f8f9fa; 
+                        padding: 10px; 
+                        border-radius: 8px;
+                        border: 2px dashed #dee2e6;
+                    ">${url}</p>
+                    <button onclick="copyToClipboard('${url}')" style="
+                        margin-top: 15px;
+                        padding: 10px 20px;
+                        background: #ff6b6b;
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-weight: bold;
+                    ">
+                        ${currentLanguage === 'ar' ? 'نسخ الرابط' : 'Copy Link'}
+                    </button>
+                </div>
+            `;
+        }
+
+        // Copy link to clipboard
+        function copyToClipboard(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert(currentLanguage === 'ar' ? 'تم نسخ الرابط!' : 'Link copied!');
+                }).catch(() => {
+                    fallbackCopyTextToClipboard(text);
+                });
+            } else {
+                fallbackCopyTextToClipboard(text);
+            }
+        }
+
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                alert(currentLanguage === 'ar' ? 'تم نسخ الرابط!' : 'Link copied!');
+            } catch (err) {
+                console.error('Could not copy text: ', err);
+                alert(currentLanguage === 'ar' ? 'فشل في نسخ الرابط' : 'Failed to copy link');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        // Event listeners
+        document.getElementById('wordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                submitWord();
+            }
+        });
+
+        document.getElementById('fontSize').addEventListener('input', updateSliderValues);
+        document.getElementById('displaySpeed').addEventListener('input', updateSliderValues);
+
+        // Close modal when clicking outside
+        document.getElementById('settingsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideSettings();
+            }
+        });
+
+        // Initialize
+        window.onload = function() {
+            updateLanguageText();
+            updateDisplayStyles();
+            
+            // Check if URL has hash for direct navigation
+            const hash = window.location.hash.substring(1);
+            if (hash && ['display', 'input'].includes(hash)) {
+                showSection(hash);
+            }
+        };
+
+        // Add some sample words for demonstration
+        words = [
+            'مرحبا', 'Hello', 'إبداع', 'Innovation', 'تفاعل', 'Interaction',
+            'مستقبل', 'Future', 'تقنية', 'Technology', 'فكرة', 'Idea'
+        ];
+    </script>
+</body>
+</html>
